@@ -1,0 +1,22 @@
+# Binaries
+*.exe
+*.out
+*.o
+*.obj
+*.a
+*.lib
+*.dll
+*.so
+
+# Build folders
+build/
+output/
+
+# VSCode settings
+.vscode/
+*.code-workspace
+
+# OS junk files
+desktop.ini
+Thumbs.db
+
