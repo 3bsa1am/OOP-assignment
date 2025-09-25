@@ -1,0 +1,40 @@
+{
+    "version": 4,
+    "configurations": [
+        {
+            "name": "MSYS2-MinGW64",
+            "compilerPath": "C:/msys64/mingw64/bin/g++.exe",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "windows-gcc-x64",
+            "includePath": [
+                "${workspaceFolder}",
+                "C:/msys64/mingw64/include",
+                "C:/msys64/mingw64/include/opencv4"
+            ],
+            "defines": [
+                "UNICODE",
+                "_UNICODE"
+            ]
+        }
+    ]
+}
+
+{
+  "configurations": [
+    {
+      "name": "windows-gcc-x64",
+      "includePath": [
+        "${workspaceFolder}/**"
+      ],
+      "compilerPath": "C:/msys64/mingw64/bin/gcc.exe",
+      "cStandard": "${default}",
+      "cppStandard": "${default}",
+      "intelliSenseMode": "windows-gcc-x64",
+      "compilerArgs": [
+        ""
+      ]
+    }
+  ],
+  "version": 4
+}
