@@ -8,13 +8,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Example:
 # set(OpenCV_DIR "C:/libs/opencv")
 
-find_package(OpenCV REQUIRED)
 
 add_executable(${PROJECT_NAME}
     assign.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ${OpenCV_LIBS})
 
 # Convenience target: cmake --build . --target run
 add_custom_target(run
