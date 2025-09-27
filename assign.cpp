@@ -5,29 +5,6 @@
 using namespace std;
 
 void grey(Image& img);
-<<<<<<< HEAD
-
-void Black_White(Image& img);
-
-void invert(Image& img);
-
-void rotate(Image& img);
-
-void brightness(Image& image);
-
-void crop(Image& image);
-
-void blur(Image& image1);
-
-
-bool okExt(const string& f);
-
-void load();
-
-void save();
-
-stack<Image>st;
-=======
 void Black_White(Image& img);
 void invert(Image& img);
 void rotate(Image& img);
@@ -42,7 +19,6 @@ void load();
 void save();
 
 stack<Image> st;
->>>>>>> 6b4b545 (edge detection & puprle filter added and some other changes)
 bool loaded = false;
 string fname;
 Image img;
@@ -51,11 +27,7 @@ int main(){
     load();
     while (true){
         cout<<"\n1.load\n2.grey\n3.black and white\n4.invert\n5.rotate\n6.brightness\n"
-<<<<<<< HEAD
-              "7.crop\n8.blur\n9.undo\n10.exit\n";
-=======
               "7.crop\n8.blur\n9.purple\n10.edge detection\n11.undo\n12.exit\n";
->>>>>>> 6b4b545 (edge detection & puprle filter added and some other changes)
         int ch;
         cin>>ch;
         if (ch==1) load();
@@ -64,27 +36,17 @@ int main(){
         else if (ch==4) invert(img);
         else if (ch==5) rotate(img);
         else if (ch==6) brightness(img);
-<<<<<<< HEAD
-        else if (ch == 7)crop(img);
-        else if (ch == 8)blur(img);
-        else if (ch== 9) {
-=======
         else if (ch == 7) crop(img);
         else if (ch == 8) blur(img);
         else if (ch==9) purple(img);
         else if (ch==10) edges(img);
         else if (ch== 11) {
->>>>>>> 6b4b545 (edge detection & puprle filter added and some other changes)
             if (!st.empty()) {
                 img = st.top();
                 st.pop();
             }
         }
-<<<<<<< HEAD
-        else if (ch==10){
-=======
         else if (ch==12){
->>>>>>> 6b4b545 (edge detection & puprle filter added and some other changes)
             char c;cout<<"do you want to save changes? y/n:";cin>>c;
             if (c=='y') save();
             break;
@@ -92,13 +54,9 @@ int main(){
     }
     return 0;
 }
-<<<<<<< HEAD
-void grey(Image& img) {
-=======
 
 void grey(Image& img) {
     st.push(img);
->>>>>>> 6b4b545 (edge detection & puprle filter added and some other changes)
     for(int i=0;i<img.width;i++)
         for(int j=0;j<img.height;j++){
             unsigned int a=0;
@@ -108,17 +66,10 @@ void grey(Image& img) {
             for (int k=0;k<3;k++)
                 img(i,j,k) = a;
         }
-<<<<<<< HEAD
-    st.push(img);
-}
-
-void Black_White(Image& img){
-=======
 }
 
 void Black_White(Image& img){
     st.push(img);
->>>>>>> 6b4b545 (edge detection & puprle filter added and some other changes)
     for(int i=0;i<img.width;i++)
         for(int j=0;j<img.height;j++){
             unsigned int a=0;
@@ -128,37 +79,20 @@ void Black_White(Image& img){
             int v=(a>127?255 :0);
             for(int k=0;k<3;k++) img(i,j,k)=v;
         }
-<<<<<<< HEAD
-    st.push(img);
-}
-
-void invert(Image& img){
-=======
 }
 
 void invert(Image& img){
     st.push(img);
->>>>>>> 6b4b545 (edge detection & puprle filter added and some other changes)
     for(int i=0;i<img.width;i++)
         for(int j=0;j<img.height;j++)
             for(int k=0;k<3;k++)
                 img(i,j,k)=255-img(i,j,k);
-<<<<<<< HEAD
-    st.push(img);
-}
-
-void rotate(Image& img) {
-
-    cout<<"Enter rotate angle: \n";
-    cout<<"1)90° 2)180° 3)270° 4)360°\n";
-=======
 }
 
 void rotate(Image& img) {
     st.push(img);
     cout<<"Enter rotate angle: \n";
     cout<<"1)90 degree 2)180 degree 3)270 degree 4)360 degree\n";
->>>>>>> 6b4b545 (edge detection & puprle filter added and some other changes)
     int x;
     cin>>x;
     x/=90;
@@ -172,30 +106,8 @@ void rotate(Image& img) {
                     r(j,img.width-1-i,k)=img(i,j,k);
         img=r;
     }
-<<<<<<< HEAD
-    st.push(img);
 }
 
-// void brightness(Image& img, bool inc) {
-//     for(int i=0;i<img.width;i++)
-//         for(int j=0;j<img.height;j++)
-//             for(int k=0;k<3;k++){
-//                 int v=img(i,j,k);
-//                 if(inc)
-//                     v=v+v/2;
-//                 else
-//                     v=v/2;
-//                 if(v>255)
-//                     v=255;
-//                 img(i,j,k)=v;
-//             }
-//     st.push(img);
-// }
-
-=======
-}
-
->>>>>>> 6b4b545 (edge detection & puprle filter added and some other changes)
 bool okExt(const string& f){
     string exts[]={".jpg",".jpeg",".png",".bmp",".tga"};
     for (auto&e:exts)
@@ -228,10 +140,7 @@ void load(){
     }
     img=Image(fname);
     loaded=true;
-<<<<<<< HEAD
-=======
     while (!st.empty()) st.pop();
->>>>>>> 6b4b545 (edge detection & puprle filter added and some other changes)
     cout<<"done.\n";
 }
 
@@ -259,10 +168,7 @@ void save() {
 }
 
 void crop (Image& image) {
-<<<<<<< HEAD
-=======
     st.push(img);
->>>>>>> 6b4b545 (edge detection & puprle filter added and some other changes)
     cout<<"Enter Starting Point: \n";
     int x,y;
     cin>>x>>y;
@@ -283,17 +189,10 @@ void crop (Image& image) {
         }
     }
     img = im;
-<<<<<<< HEAD
-    st.push(img);
-}
-
-void blur (Image& image1) {
-=======
 }
 
 void blur (Image& image1) {
     st.push(img);
->>>>>>> 6b4b545 (edge detection & puprle filter added and some other changes)
     Image image2 = image1;
     cout<<"Enter the level of blurriness: \n";
     cout<<"1)Weak "
@@ -326,17 +225,10 @@ void blur (Image& image1) {
         image1 = image2;
     }
     img = image1;
-<<<<<<< HEAD
-    st.push(img);
-}
-
-void brightness(Image& image) {
-=======
 }
 
 void brightness(Image& image) {
     st.push(img);
->>>>>>> 6b4b545 (edge detection & puprle filter added and some other changes)
     cout<<"Do you want the image "
           "1)Lighter 2)Darker \n";
     int x;
@@ -357,10 +249,6 @@ void brightness(Image& image) {
         }
     }
     img = image;
-<<<<<<< HEAD
-    st.push(img);
-}
-=======
 }
 
 void purple(Image& img){
@@ -388,4 +276,3 @@ void edges(Image& img){
             cont=255-cont;
             for(int k=0;k<3;k++)
                 img(i,j,k)=cont;}}}
->>>>>>> 6b4b545 (edge detection & puprle filter added and some other changes)
