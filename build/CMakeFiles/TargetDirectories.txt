@@ -1,4 +1,0 @@
-C:/Users/dell/assignment/build/CMakeFiles/assignment.dir
-C:/Users/dell/assignment/build/CMakeFiles/run.dir
-C:/Users/dell/assignment/build/CMakeFiles/edit_cache.dir
-C:/Users/dell/assignment/build/CMakeFiles/rebuild_cache.dir
