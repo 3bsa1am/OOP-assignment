@@ -1,0 +1,31 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "mingw-msys2-opencv",
+      "generator": "MinGW Makefiles",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "OpenCV_DIR": "C:/msys64/mingw64/lib/cmake/opencv4"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "mingw-msys2-opencv-build",
+      "configurePreset": "mingw-msys2-opencv",
+      "targets": ["all"],
+      "configuration": "Release"
+    },
+    {
+      "name": "mingw-msys2-opencv-run",
+      "configurePreset": "mingw-msys2-opencv",
+      "targets": ["run"],
+      "configuration": "Release"
+    }
+  ]
+}
+
+
+
