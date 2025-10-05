@@ -43,6 +43,8 @@ void flip(Image &img);
 void resize(Image &img);
 void addFrame(Image& img);
 void infrared(Image& img);
+void merge(Image& img);
+void sunlight(Image& img);
 
 bool extentions(const string& f);
 void load();
@@ -58,7 +60,7 @@ int main(){
     while (true){
         cout<<"\n1.load\n2.grey\n3.black and white\n4.invert\n5.rotate\n6.brightness\n"
               "7.crop\n8.blur\n9.purple\n10.edge detection\n11.flip\n12.resize\n"
-              "13.add frame\n14.infrared\n15.save\n16.undo\n17.exit\n";
+              "13.add frame\n14.infrared\n15.sunlight\n16.merge\n17.save\n18.undo\n19.exit\n";
         int ch;
         cin>>ch;
         if (ch==1) load();
@@ -75,14 +77,16 @@ int main(){
         else if (ch==12) resize(img);
         else if (ch==13) addFrame(img);
         else if (ch==14) infrared(img);
-        else if (ch==15) save();
-        else if (ch== 16) {
+        else if (ch==15) sunlight(img);
+        else if (ch==16) merge(img);
+        else if (ch==17) save();
+        else if (ch== 18) {
             if (!st.empty()) {
                 img = st.top();
                 st.pop();
             }
         }
-        else if (ch==17){
+        else if (ch==19){
             char c;cout<<"do you want to save changes? y/n:";cin>>c;
             if (c=='y') save();
             break;
@@ -309,7 +313,7 @@ void edges(Image& img){
             for(int k=0;k<3;k++)
                 img(i,j,k)=cont;}}}
 
-void flip(Image &img){ 
+void flip(Image &img){
     st.push(img);
     cout << "flip horizontal or vertical? h/v: ";
     char c;
@@ -404,15 +408,15 @@ void addFrame(Image& img) {
                 }
             } else {
                 if (choose == 1) {
-                    framed(i, j, 0) = 0;   
-                    framed(i, j, 1) = 0;   
+                    framed(i, j, 0) = 0;
+                    framed(i, j, 1) = 0;
                     framed(i, j, 2) = 250;
-                } 
+                }
                 else if (choose == 2) {
-                    framed(i, j, 0) = (i % 2 == 0 ? 245 : 245); 
-                    framed(i, j, 1) = (i % 2 == 0 ? 0 : 250);  
-                    framed(i, j, 2) = 0;                      
-                } 
+                    framed(i, j, 0) = (i % 2 == 0 ? 245 : 245);
+                    framed(i, j, 1) = (i % 2 == 0 ? 0 : 250);
+                    framed(i, j, 2) = 0;
+                }
                 else {
                     if ((i + j) % 20 < 10) {
                         for (int k = 0; k < 3; k++) framed(i, j, k) = 200;
@@ -437,12 +441,64 @@ void infrared(Image& img) {
             int b = img(i, j, 2);
 
             int red   = min(255, (int)(r * 1.25 + g * 0.31 + b * 0.31));
-            int green = g * 0.11; 
-            int blue  = b * 0.11; 
+            int green = g * 0.11;
+            int blue  = b * 0.11;
 
             img(i, j, 0) = red;
             img(i, j, 1) = green;
             img(i, j, 2) = blue;
         }
     }
+}
+
+void merge(Image& img1){
+    st.push(img1);
+    string name;
+    cout<<"Enter the image you want to merge: \n";
+    cin>>name;
+    Image img2(name);
+    cout<<"img1: "<<img1.width<<"X"<<img1.height;
+    cout<<"\nimg2: "<<img2.width<<"X"<<img2.height<<'\n';
+    if (img1.width != img2.width || img1.height != img2.height) {
+        cout<<"Do you want to resize 1)image 1 or 2)image 2: \n";
+        int x;
+        cin>>x;
+        if (x==1)
+            resize(img1);
+        else if (x==2)
+            resize(img2);
+    }
+    cout<<"img1: "<<img1.width<<"X"<<img1.height;
+    cout<<"\nimg2: "<<img2.width<<" "<<img2.height<<'\n';
+    Image ans(img1.width,img1.height);
+
+    for (int i = 0;i<img1.width;i++) {
+        for (int j = 0;j<img1.height;j++) {
+            for (int k = 0;k<3;k++) {
+                ans(i,j,k) = (img1(i,j,k)+img2(i,j,k))/2;
+            }
+        }
+    }
+    img = ans;
+}
+
+void sunlight(Image& img){
+    Image tmp(img);
+
+    for (int i = 0;i<img.width;i++) {
+        for (int j = 0;j<img.height;j++) {
+            double red = img(i,j,0);
+            double green = img(i,j,1);
+            double blue = img(i,j,2);
+
+            int newRed = 1.1 * red + 10;
+            int newGreen = green * 1.05  + 5;
+            int newBlue = blue * .95 ;
+
+            tmp(i,j,0) = max(0,min(255,newRed));
+            tmp(i,j,1) = max(0,min(255,newGreen));
+            tmp(i,j,2) = max(0,min(255,newBlue));
+        }
+    }
+    img = tmp;
 }
