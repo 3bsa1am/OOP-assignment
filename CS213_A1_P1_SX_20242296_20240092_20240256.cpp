@@ -45,6 +45,7 @@ void addFrame(Image& img);
 void infrared(Image& img);
 void merge(Image& img);
 void sunlight(Image& img);
+void skew(Image& img);
 
 bool extentions(const string& f);
 void load();
@@ -60,7 +61,7 @@ int main(){
     while (true){
         cout<<"\n1.load\n2.grey\n3.black and white\n4.invert\n5.rotate\n6.brightness\n"
               "7.crop\n8.blur\n9.purple\n10.edge detection\n11.flip\n12.resize\n"
-              "13.add frame\n14.infrared\n15.sunlight\n16.merge\n17.save\n18.undo\n19.exit\n";
+              "13.add frame\n14.infrared\n15.sunlight\n16.merge\n17.save\n18.undo\n19.exit\n20.skew\n";
         int ch;
         cin>>ch;
         if (ch==1) load();
@@ -91,6 +92,7 @@ int main(){
             if (c=='y') save();
             break;
         }
+        else if (ch==20)skew(img);
     }
     return 0;
 }
@@ -501,4 +503,40 @@ void sunlight(Image& img){
         }
     }
     img = tmp;
+}
+
+
+void skew(Image& img) {
+    st.push(img);
+    cout<<"Enter the degree of vertical skewness you want -45 -> 45: \n";
+    int degree;
+    cin>>degree;
+    double radian = degree * M_PI / 180.0 ;
+    double factor = tan(radian);
+    Image image(img.width,img.height + (int)(img.width * fabs(factor)));
+
+    for (int i = 0;i<image.width;i++) {
+        for (int j = 0;j<image.height;j++) {
+            double nj = j - factor*i;
+
+            if (nj >= 0 && nj < img.height) {
+                int n1 = floor(nj);
+                int n2 = ceil(nj);
+                double w = nj - n1;
+                if (n1 == n2) {
+                    for (int k = 0;k<3;k++) {
+                        image(i,j,k) = img(i,n1,k);
+                    }
+                }
+                else {
+                    if (n1 >= 0 && n2 < img.height) {
+                        for (int k = 0; k < 3; k++) {
+                            image(i,j,k) = (1-w)*img(i,n1,k) + w*img(i,n2,k);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    img = image;
 }
