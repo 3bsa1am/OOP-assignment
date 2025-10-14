@@ -815,3 +815,4 @@ void warmCold(Image& img) {
     img = result;
     cout << ((choice == 1) ? "Warm" : "Cold") << " tone applied with Strength level " << str << ".\n";
 }
+
