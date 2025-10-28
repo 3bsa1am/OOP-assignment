@@ -3,6 +3,8 @@
 #include <QFileDialog>
 #include <QInputDialog>
 #include <QMessageBox>
+#include <QColorDialog>
+#include <QPainter>
 #include <QtMath>
 #include <QMouseEvent>
 #include <QEvent>
@@ -51,7 +53,17 @@ MainWindow::MainWindow(QWidget *parent)
     if (ui->btnLoad) ui->btnLoad->setIconSize(btnIconSize);
     if (ui->btnSave) ui->btnSave->setIconSize(btnIconSize);
     if (ui->btnUndo) ui->btnUndo->setIconSize(btnIconSize);
+    if (ui->btnRedo) ui->btnRedo->setIconSize(btnIconSize);
     if (ui->btnClear) ui->btnClear->setIconSize(btnIconSize);
+    if (ui->btnHelp) ui->btnHelp->setIconSize(btnIconSize);
+
+
+    connect(new QShortcut(QKeySequence("Ctrl+l"), this), &QShortcut::activated, this, &MainWindow::on_btnLoad_clicked);
+    connect(new QShortcut(QKeySequence("Ctrl+S"), this), &QShortcut::activated, this, &MainWindow::on_btnSave_clicked);
+    connect(new QShortcut(QKeySequence("Ctrl+u"), this), &QShortcut::activated, this, &MainWindow::on_btnUndo_clicked);
+    connect(new QShortcut(QKeySequence("Ctrl+r"), this), &QShortcut::activated, this, &MainWindow::on_btnRedo_clicked);
+    connect(new QShortcut(QKeySequence("Ctrl+C"), this), &QShortcut::activated, this, &MainWindow::on_btnClear_clicked);
+
 
     QShortcut *sc = new QShortcut(QKeySequence("Ctrl+M"), this);
     connect(sc, &QShortcut::activated, this, &MainWindow::on_btnMerge_clicked);
@@ -75,6 +87,7 @@ void MainWindow::pushUndo()
 {
     if (!processed.isNull())
         undoStack.push(processed);
+    redoStack.clear(); // <-- A new action clears the redo stack
 }
 
 void MainWindow::updateViews()
@@ -99,6 +112,9 @@ void MainWindow::updateViews()
         QSlider *s = ui->centralwidget->findChild<QSlider*>("sliderBlur");
         if (s) lbl->setText(QString::number(s->value()));
     }
+
+    ui->btnUndo->setEnabled(!undoStack.isEmpty());
+    ui->btnRedo->setEnabled(!redoStack.isEmpty());
 }
 
 void MainWindow::on_btnLoad_clicked()
@@ -116,6 +132,7 @@ void MainWindow::on_btnLoad_clicked()
     original = img.convertToFormat(QImage::Format_RGB888);
     processed = original;
     undoStack.clear();
+    redoStack.clear();
 
     ui->sliderBrightness->setValue(100);
     ui->lblSliderValue->setText("100%");
@@ -138,7 +155,17 @@ void MainWindow::on_btnSave_clicked()
 void MainWindow::on_btnUndo_clicked()
 {
     if (!undoStack.isEmpty()) {
+        redoStack.push(processed);
         processed = undoStack.pop();
+        updateViews();
+    }
+}
+
+void MainWindow::on_btnRedo_clicked()
+{
+    if (!redoStack.isEmpty()) {
+        undoStack.push(processed);
+        processed = redoStack.pop();
         updateViews();
     }
 }
@@ -148,10 +175,25 @@ void MainWindow::on_btnClear_clicked()
     if (original.isNull()) return;
     processed = original;
     undoStack.clear();
+    redoStack.clear();
     ui->sliderBrightness->setValue(100);
     ui->lblSliderValue->setText("100%");
     if (QSlider *s = ui->centralwidget->findChild<QSlider*>("sliderBlur")) s->setValue(0);
     updateViews();
+}
+
+void MainWindow::on_btnHelp_clicked()
+{
+    QString text = "<b>Keyboard Shortcuts</b><br><br>"
+                   "<b>Ctrl+l</b>: Load Image<br>"
+                   "<b>Ctrl+S</b>: Save Image<br>"
+                   "<b>Ctrl+u</b>: Undo<br>"
+                   "<b>Ctrl+r</b>: Redo<br>"
+                   "<b>Ctrl+C</b>: Clear (Reset to Original)<br>"
+                   "<b>Ctrl+M</b>: Merge Image<br><br>"
+                   "<b>Crop Tool</b>:<br>"
+                   "Click and drag on the <i>processed</i> image to select an area, then press the 'Crop' button.";
+    QMessageBox::information(this, "Help", text);
 }
 
 void MainWindow::on_btnGrey_clicked()
@@ -478,6 +520,7 @@ static QImage fastBoxBlur(const QImage &src, int radius, int iterations = 1)
     return dst;
 }
 
+
 void MainWindow::on_sliderBrightness_sliderPressed()
 {
     sliderBase = processed;
@@ -568,27 +611,54 @@ void MainWindow::on_btnSunlight_clicked()
     updateViews();
 }
 
+
 void MainWindow::on_btnFrameSimple_clicked()
 {
     if (processed.isNull()) return;
+
+    QColor color = QColorDialog::getColor(Qt::white, this, "Frame Color");
+    if (!color.isValid()) return;
+
+    bool ok;
+    int thickness = QInputDialog::getInt(this, "Thickness", "Frame Thickness:", 40, 5, 200, 1, &ok);
+    if (!ok) return;
+
     pushUndo();
-    processed = frameImg(processed, 1, 40);
+    processed = frameImg(processed, color, thickness);
     updateViews();
 }
 
 void MainWindow::on_btnFrameDouble_clicked()
 {
     if (processed.isNull()) return;
+
+    bool ok1, ok2, ok3, ok4;
+    QColor color1 = QColorDialog::getColor(Qt::white, this, "Outer Frame Color");
+    if (!color1.isValid()) return;
+    int thick1 = QInputDialog::getInt(this, "Outer Thickness", "Outer Frame Thickness:", 30, 5, 200, 1, &ok1);
+    if (!ok1) return;
+
+    QColor color2 = QColorDialog::getColor(Qt::lightGray, this, "Inner Frame Color");
+    if (!color2.isValid()) return;
+    int thick2 = QInputDialog::getInt(this, "Inner Thickness", "Inner Frame Thickness:", 20, 5, 200, 1, &ok2);
+    if (!ok2) return;
+
     pushUndo();
-    processed = frameImg(processed, 2, 50);
+    QImage temp = frameImg(processed, color2, thick2);
+    processed = frameImg(temp, color1, thick1);
     updateViews();
 }
 
 void MainWindow::on_btnFrameFancy_clicked()
 {
     if (processed.isNull()) return;
+
+    bool ok;
+    int thickness = QInputDialog::getInt(this, "Thickness", "Frame Thickness:", 45, 5, 200, 1, &ok);
+    if (!ok) return;
+
     pushUndo();
-    processed = frameImg(processed, 3, 45);
+    processed = fancyFrameImg(processed, thickness);
     updateViews();
 }
 
@@ -596,7 +666,7 @@ void MainWindow::on_btnSkew_clicked()
 {
     if (processed.isNull()) return;
     bool ok;
-    int deg = QInputDialog::getInt(this, "Skew", "Degree (-45 .. 45):", 10, -45, 45, 1, &ok);
+    int deg = QInputDialog::getInt(this, "Skew", "Degree (0 - 45):", 10, -45, 45, 1, &ok);
     if (!ok) return;
     pushUndo();
     processed = skewImg(processed, deg);
@@ -606,8 +676,25 @@ void MainWindow::on_btnSkew_clicked()
 void MainWindow::on_btnFourFilters_clicked()
 {
     if (processed.isNull()) return;
+
+    QStringList filters = {
+        "Original", "Grey", "B&W", "Invert", "Purple", "Edges",
+        "Blur (Medium)", "Infrared", "Sunlight", "Old TV", "Oil Paint",
+        "Graffiti (Anime)", "Warm", "Cold"
+    };
+
+    bool ok1, ok2, ok3, ok4;
+    QString tl = QInputDialog::getItem(this, "Top-Left", "Filter:", filters, 0, false, &ok1);
+    if (!ok1) return;
+    QString tr = QInputDialog::getItem(this, "Top-Right", "Filter:", filters, 2, false, &ok2);
+    if (!ok2) return;
+    QString bl = QInputDialog::getItem(this, "Bottom-Left", "Filter:", filters, 1, false, &ok3);
+    if (!ok3) return;
+    QString br = QInputDialog::getItem(this, "Bottom-Right", "Filter:", filters, 4, false, &ok4);
+    if (!ok4) return;
+
     pushUndo();
-    processed = fourFiltersImg(processed);
+    processed = fourFiltersImg(processed, tl, tr, bl, br);
     updateViews();
 }
 
@@ -623,7 +710,7 @@ void MainWindow::on_btnOilPainting_clicked()
 {
     if (processed.isNull()) return;
     bool ok;
-    int r = QInputDialog::getInt(this, "Oil Painting", "Radius (1..5):", 2, 1, 10, 1, &ok);
+    int r = QInputDialog::getInt(this, "Oil Painting", "Radius (1-5):", 2, 1, 10, 1, &ok);
     if (!ok) return;
     pushUndo();
     processed = oilPaintingImg(processed, r);
@@ -701,11 +788,7 @@ QImage MainWindow::toBW(const QImage &in)
 QImage MainWindow::invertImg(const QImage &in)
 {
     QImage out = in.convertToFormat(QImage::Format_RGB888);
-    for (int x = 0; x < out.width(); x++)
-        for (int y = 0; y < out.height(); y++) {
-            QRgb p = out.pixel(x, y);
-            out.setPixel(x, y, qRgb(255 - qRed(p), 255 - qGreen(p), 255 - qBlue(p)));
-        }
+    out.invertPixels();
     return out;
 }
 
@@ -769,8 +852,8 @@ QImage MainWindow::brightnessImg(const QImage &in, double factor)
 
 QImage MainWindow::flipImg(const QImage &in, bool horizontal)
 {
-    if (horizontal) return in.flipped(Qt::Horizontal);
-    else return in.flipped(Qt::Vertical);
+    if (horizontal) return in.mirrored(true, false);
+    else return in.mirrored(false, true);
 }
 
 QImage MainWindow::resizeImg(const QImage &in, int w, int h)
@@ -811,28 +894,41 @@ QImage MainWindow::sunlightImg(const QImage &in)
     return tmp;
 }
 
-QImage MainWindow::frameImg(const QImage &in, int style, int thickness)
+QImage MainWindow::frameImg(const QImage &in, QColor color, int thickness)
 {
     QImage img = in.convertToFormat(QImage::Format_RGB888);
-    int nWidth = int(img.width() + 1.5 * thickness);
-    int nHeight = int(img.height() + 1.5 * thickness);
+    int nWidth = img.width() + 2 * thickness;
+    int nHeight = img.height() + 2 * thickness;
+
+    QImage framed(nWidth, nHeight, QImage::Format_RGB888);
+    framed.fill(color.rgb());
+
+    QPainter painter(&framed);
+    painter.drawImage(thickness, thickness, img);
+    painter.end();
+
+    return framed;
+}
+
+QImage MainWindow::fancyFrameImg(const QImage &in, int thickness)
+{
+    QImage img = in.convertToFormat(QImage::Format_RGB888);
+    int nWidth = img.width() + 2 * thickness;
+    int nHeight = img.height() + 2 * thickness;
     QImage framed(nWidth, nHeight, QImage::Format_RGB888);
     framed.fill(qRgb(0, 0, 0));
+
     for (int i = 0; i < nWidth; i++) {
         for (int j = 0; j < nHeight; j++) {
-            bool inside = (i >= thickness && i < img.width() + thickness && j >= thickness && j < img.height() + thickness);
+            bool inside = (i >= thickness && i < img.width() + thickness &&
+                           j >= thickness && j < img.height() + thickness);
+
             if (inside) {
                 QRgb p = img.pixel(i - thickness, j - thickness);
                 framed.setPixel(i, j, p);
             } else {
-                if (style == 1) {
-                    framed.setPixel(i, j, qRgb(0, 0, 250));
-                } else if (style == 2) {
-                    framed.setPixel(i, j, qRgb(245, 0, 0));
-                } else {
-                    if ((i + j) % 20 < 10) framed.setPixel(i, j, qRgb(200, 200, 200));
-                    else framed.setPixel(i, j, qRgb(15, 15, 15));
-                }
+                if ((i + j) % 20 < 10) framed.setPixel(i, j, qRgb(200, 200, 200));
+                else framed.setPixel(i, j, qRgb(15, 15, 15));
             }
         }
     }
@@ -872,38 +968,53 @@ QImage MainWindow::skewImg(const QImage &in, int degree)
     return image;
 }
 
-QImage MainWindow::fourFiltersImg(const QImage &in)
+QImage MainWindow::applyFilterByName(const QImage &in, const QString& filterName)
+{
+    if (filterName == "Original") return in;
+    if (filterName == "Grey") return toGrey(in);
+    if (filterName == "B&W") return toBW(in);
+    if (filterName == "Invert") return invertImg(in);
+    if (filterName == "Purple") return purpleImg(in);
+    if (filterName == "Edges") return edgesImg(in);
+    if (filterName == "Blur (Medium)") return blurImg(in, 32);
+    if (filterName == "Infrared") return infraredImg(in);
+    if (filterName == "Sunlight") return sunlightImg(in);
+    if (filterName == "Old TV") return oldTVImg(in);
+    if (filterName == "Oil Paint") return oilPaintingImg(in, 2);
+    if (filterName == "Graffiti (Anime)") return animeImg(in);
+    if (filterName == "Warm") return warmColdImg(in, 1, 2);
+    if (filterName == "Cold") return warmColdImg(in, 2, 2);
+
+    return in;
+}
+
+QImage MainWindow::fourFiltersImg(const QImage &in, const QString &tl, const QString &tr, const QString &bl, const QString &br)
 {
     QImage img = in.convertToFormat(QImage::Format_RGB888);
-    int mw = img.width() / 2;
-    int mh = img.height() / 2;
-    QImage org = img;
-    for (int i = mw; i < img.width(); i++) {
-        for (int j = 0; j < mh; j++) {
-            QRgb p = org.pixel(i, j);
-            img.setPixel(i, j, qRgb(255 - qRed(p), 255 - qGreen(p), 255 - qBlue(p)));
-        }
-    }
-    for (int i = 0; i < mw; i++) {
-        for (int j = mh; j < img.height(); j++) {
-            QRgb p = org.pixel(i, j);
-            int a = (qRed(p) + qGreen(p) + qBlue(p)) / 3;
-            img.setPixel(i, j, qRgb(a, a, a));
-        }
-    }
-    QImage tmp = org;
-    for (int i = mw + 1; i < img.width() - 1; i++) {
-        for (int j = mh + 1; j < img.height() - 1; j++) {
-            int cx = 0, cy = 0;
-            QRgb p1 = tmp.pixel(i + 1, j), p2 = tmp.pixel(i - 1, j), p3 = tmp.pixel(i, j + 1), p4 = tmp.pixel(i, j - 1);
-            cx = qAbs(qRed(p1) - qRed(p2));
-            cy = qAbs(qRed(p3) - qRed(p4));
-            int c = qMin(255, cx + cy);
-            c = 255 - c;
-            img.setPixel(i, j, qRgb(c, c, c));
-        }
-    }
-    return img;
+    int w = img.width();
+    int h = img.height();
+    int mw = w / 2;
+    int mh = h / 2;
+
+    QImage img_tl = img.copy(0, 0, mw, mh);
+    QImage img_tr = img.copy(mw, 0, w - mw, mh);
+    QImage img_bl = img.copy(0, mh, mw, h - mh);
+    QImage img_br = img.copy(mw, mh, w - mw, h - mh);
+
+    img_tl = applyFilterByName(img_tl, tl);
+    img_tr = applyFilterByName(img_tr, tr);
+    img_bl = applyFilterByName(img_bl, bl);
+    img_br = applyFilterByName(img_br, br);
+
+    QImage out(w, h, QImage::Format_RGB888);
+    QPainter p(&out);
+    p.drawImage(0, 0, img_tl);
+    p.drawImage(mw, 0, img_tr);
+    p.drawImage(0, mh, img_bl);
+    p.drawImage(mw, mh, img_br);
+    p.end();
+
+    return out;
 }
 
 QImage MainWindow::oldTVImg(const QImage &in)
