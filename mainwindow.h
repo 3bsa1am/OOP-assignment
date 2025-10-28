@@ -7,6 +7,7 @@
 #include <QStack>
 #include <QRubberBand>
 #include <QRect>
+#include <QColor>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -28,7 +29,9 @@ private slots:
     void on_btnLoad_clicked();
     void on_btnSave_clicked();
     void on_btnUndo_clicked();
+    void on_btnRedo_clicked();
     void on_btnClear_clicked();
+    void on_btnHelp_clicked();
 
     void on_btnGrey_clicked();
     void on_btnBW_clicked();
@@ -83,6 +86,7 @@ private:
     QImage processed;
     QImage sliderBase;
     QStack<QImage> undoStack;
+    QStack<QImage> redoStack;
 
     QRubberBand *rubberBand = nullptr;
     bool selecting = false;
@@ -94,6 +98,8 @@ private:
 
     void pushUndo();
     void updateViews();
+    void adjustProcessedToOriginalSize();
+
 
     QImage toGrey(const QImage &in);
     QImage toBW(const QImage &in);
@@ -108,9 +114,12 @@ private:
     QImage blurImg(const QImage &in, int iterations);
     QImage infraredImg(const QImage &in);
     QImage sunlightImg(const QImage &in);
-    QImage frameImg(const QImage &in, int style, int thickness);
+    QImage frameImg(const QImage &in, QColor color, int thickness);
+    QImage fancyFrameImg(const QImage &in, int thickness);
     QImage oldTVImg(const QImage &in);
-    QImage fourFiltersImg(const QImage &in);
+    QImage fourFiltersImg(const QImage &in, const QString &tl, const QString &tr, const QString &bl, const QString &br);
+    QImage applyFilterByName(const QImage &in, const QString &filterName);
+
     QImage skewImg(const QImage &in, int degree);
     QImage oilPaintingImg(const QImage &in, int radius);
     QImage animeImg(const QImage &in);
@@ -121,3 +130,4 @@ private:
 };
 
 #endif
+
